@@ -1,19 +1,19 @@
-import { HStack, useToast, VStack } from 'native-base'
+import { useEffect, useState } from 'react'
 import { Share } from 'react-native'
+import { HStack, useToast, VStack } from 'native-base'
 import { useRoute } from '@react-navigation/native'
 
 import { api } from '../services/api'
 
 import { Header } from '../components/Header'
-import { useEffect, useState } from 'react'
 import { Loading } from '../components/Loading'
-import { Guesses } from '../components/Guesses'
-import { Option } from '../components/Option'
-import { EmptyMyPoolList } from '../components/EmptyMyPoolList'
 import { PoolCardProps } from '../components/PoolCard'
 import { PoolHeader } from '../components/PoolHeader'
+import { EmptyMyPoolList } from '../components/EmptyMyPoolList'
+import { Option } from '../components/Option'
+import { Guesses } from '../components/Guesses'
 
-interface RouteParams {
+interface RoutePrams {
   id: string
 }
 
@@ -26,34 +26,32 @@ export function Details() {
     {} as PoolCardProps
   )
 
-  const toast = useToast()
   const route = useRoute()
+  const toast = useToast()
 
-  const { id } = route.params as RouteParams
+  const { id } = route.params as RoutePrams
 
   async function fetchPoolDetails() {
     try {
       setIsLoading(true)
-
-      const response = await api.get('/pools/${id}')
+      const response = await api.get(`/pools/${id}`)
       setPoolDetails(response.data.pool)
     } catch (error) {
       console.log(error)
-
       toast.show({
-        title: 'Não foi possível carregar os detalhes do bolões',
+        title: 'Não foi possível carregar os detalhes do bolão',
         placement: 'top',
         bgColor: 'red.500'
       })
     } finally {
       setIsLoading(false)
     }
+  }
 
-    async function handleCodeShare() {
-      await Share.share({
-        message: poolDetails.code
-      })
-    }
+  async function handleCodeShare() {
+    await Share.share({
+      message: poolDetails.code
+    })
   }
 
   useEffect(() => {
@@ -73,25 +71,24 @@ export function Details() {
         onShare={handleCodeShare}
       />
 
-      {poolDetails._count?.participants < 0 ? (
+      {poolDetails._count?.participants > 0 ? (
         <VStack px={5} flex={1}>
           <PoolHeader data={poolDetails} />
 
-          <HStack bgColor="gray.800" p={1} rounded="sm" mb={5}>
+          <HStack bgColor="gray.800" p={1} rounded="sm" mb={8}>
             <Option
               title="Seus palpites"
               isSelected={optionSelected === 'guesses'}
               onPress={() => setOptionSelected('guesses')}
             />
-
             <Option
-              title="Ranking do Grupo"
+              title="Ranking do grupo"
               isSelected={optionSelected === 'ranking'}
               onPress={() => setOptionSelected('ranking')}
             />
           </HStack>
 
-          <Guesses poolId={poolDetails.id} />
+          <Guesses poolId={poolDetails.id} code={poolDetails.code} />
         </VStack>
       ) : (
         <EmptyMyPoolList code={poolDetails.code} />
